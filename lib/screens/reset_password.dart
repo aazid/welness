@@ -57,14 +57,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     }
 
     try {
-      // Re-authenticate user with old password
       final credential = EmailAuthProvider.credential(
         email: user.email!,
         password: oldPassword,
       );
       await user.reauthenticateWithCredential(credential);
-
-      // Update password
       await user.updatePassword(newPassword);
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -77,16 +74,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         ),
       );
 
-      // Clear fields
       oldPasswordController.clear();
       newPasswordController.clear();
       confirmPasswordController.clear();
 
-      // Sign out user to force re-login
       await _auth.signOut();
 
-      // Navigate to login screen
-      // Replace '/login' with your actual login route or use Navigator.pushReplacement if you use widget routes
       Navigator.of(context).pushReplacementNamed('/login');
     } on FirebaseAuthException catch (e) {
       String errorMsg = "Password change failed";
@@ -133,7 +126,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           key: _formKey,
           child: Column(
             children: [
-              // Old Password
               TextFormField(
                 controller: oldPasswordController,
                 obscureText: _obscureOld,
@@ -164,7 +156,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               ),
               SizedBox(height: 20.h),
 
-              // New Password
               TextFormField(
                 controller: newPasswordController,
                 obscureText: _obscureNew,
@@ -232,7 +223,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               ),
               SizedBox(height: 30.h),
 
-              // Submit Button
               ElevatedButton.icon(
                 onPressed: _submit,
                 style: ElevatedButton.styleFrom(

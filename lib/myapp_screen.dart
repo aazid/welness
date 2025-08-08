@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:welness_flutter_project/screens/login_screen.dart';
-// import 'package:firebase_core/firebase_core.dart';
+import 'package:welness_flutter_project/screens/splash_screen.dart';
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(
-        360,
-        690,
-      ), // Adjust this to match your design mockup
+      designSize: Size(360, 690),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
@@ -21,48 +18,46 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             fontFamily: 'Poppins',
             scaffoldBackgroundColor: Colors.black,
-            colorScheme: const ColorScheme.dark(secondary: Color(0xFF262626)),
+            colorScheme: ColorScheme.dark(secondary: Color(0xFF262626)),
             iconButtonTheme: IconButtonThemeData(
               style: ButtonStyle(
                 iconColor: WidgetStateProperty.all(Colors.white),
               ),
             ),
-            iconTheme: const IconThemeData(color: Colors.white),
-            appBarTheme: const AppBarTheme(
+            iconTheme: IconThemeData(color: Colors.white),
+            appBarTheme: AppBarTheme(
               backgroundColor: Colors.black,
-              titleTextStyle: TextStyle(fontSize: 20, color: Colors.white),
+              titleTextStyle: TextStyle(fontSize: 20.sp, color: Colors.white),
             ),
-            bottomSheetTheme: const BottomSheetThemeData(
+            bottomSheetTheme: BottomSheetThemeData(
               backgroundColor: Colors.grey,
-              elevation: 3,
+              elevation: 3.sp,
             ),
-            inputDecorationTheme: const InputDecorationTheme(
+            inputDecorationTheme: InputDecorationTheme(
               fillColor: Colors.grey,
               border: OutlineInputBorder(
                 borderSide: BorderSide.none,
-                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderRadius: BorderRadius.all(Radius.circular(12.r)),
               ),
               hintStyle: TextStyle(color: Colors.grey),
             ),
-            timePickerTheme: const TimePickerThemeData(
+            timePickerTheme: TimePickerThemeData(
               dialBackgroundColor: Colors.black,
               dialHandColor: Colors.white,
               dialTextColor: Colors.white,
               entryModeIconColor: Colors.white,
               helpTextStyle: TextStyle(color: Colors.grey),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(24)),
+                borderRadius: BorderRadius.all(Radius.circular(24.r)),
               ),
             ),
-            textTheme: const TextTheme(
-              bodyMedium: TextStyle(color: Colors.white),
-            ),
+            textTheme: TextTheme(bodyMedium: TextStyle(color: Colors.white)),
             hoverColor: Colors.transparent,
           ),
           home: child,
         );
       },
-      child: LoginScreen(),
+      child: SplashScreen(),
     );
   }
 }

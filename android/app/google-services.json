@@ -12,7 +12,20 @@
           "package_name": "com.example.welness_flutter_project"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "44321588889-t4joee5cne0kqfam1iovdm4t7tonq5mf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.welness_flutter_project",
+            "certificate_hash": "52a434e680ca4a0171f4db1c5bcc2d946980c84d"
+          }
+        },
+        {
+          "client_id": "44321588889-nqhljsuie2vv5arhn43oprh2t9n9cvau.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDgPy_ui4-ZJ1UxYAO_yMENOnbBqxZPOrk"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "44321588889-nqhljsuie2vv5arhn43oprh2t9n9cvau.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -27,15 +27,12 @@ class ProfileScreen extends StatelessWidget {
         padding: EdgeInsets.all(14.0),
         child: ListView(
           children: [
-            // Profile Card
             Container(
-              // padding: EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: Colors.grey[900],
                 borderRadius: BorderRadius.circular(12),
               ),
               child: ListTile(
-                // subtitleTextStyle: TextStyle(color: Colors.white),
                 leading: CircleAvatar(
                   radius: 40,
                   backgroundImage: AssetImage("images/profile.png"),
@@ -67,7 +64,6 @@ class ProfileScreen extends StatelessWidget {
             ),
             SizedBox(height: 15.h),
             buildTile(Icons.menu_book, "Content prefernces"),
-
             SizedBox(height: 20.h),
             Text(
               "Account",
@@ -89,8 +85,6 @@ class ProfileScreen extends StatelessWidget {
                     builder: (context) => ResetPasswordScreen(),
                   ),
                 );
-
-                // Your action
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[900],
@@ -98,7 +92,7 @@ class ProfileScreen extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
               ),
               child: Row(

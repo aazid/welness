@@ -1,22 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:welness_flutter_project/screens/profile_screen.dart';
-import 'package:welness_flutter_project/screens/quotes_detail_screen.dart';
+import 'package:welness_flutter_project/screens/quotes_detail_screen.dart'; // Make sure QuotesByPreferenceScreen is here or imported
 
-class DashboardScreens extends StatelessWidget {
+class DashboardScreens extends StatefulWidget {
   DashboardScreens({super.key});
 
   @override
+  State<DashboardScreens> createState() => _DashboardScreensState();
+}
+
+class _DashboardScreensState extends State<DashboardScreens> {
+  final List<String> userPreferences = ['Love', 'Productivity'];
+
+  @override
   Widget build(BuildContext context) {
+    const todayQuoteText = "Your wellness is an investment, not an expense.";
+    const todayQuoteAuthor = "John Quelch";
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
         child: ListView(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   'Explore',
                   style: TextStyle(
                     color: Colors.white,
@@ -31,29 +41,30 @@ class DashboardScreens extends StatelessWidget {
                       MaterialPageRoute(builder: (context) => ProfileScreen()),
                     );
                   },
-                  child: CircleAvatar(
+                  child: const CircleAvatar(
                     radius: 20,
                     backgroundImage: AssetImage("images/profile.png"),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 24),
+
+            const SizedBox(height: 24),
 
             Row(
               children: [
                 Expanded(
                   child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
                       color: Colors.grey[900],
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+                      children: const [
                         Icon(Icons.favorite_border, color: Colors.white),
-                        SizedBox(height: 8),
+                        SizedBox(width: 8),
                         Text(
                           'My favorites',
                           style: TextStyle(color: Colors.white),
@@ -62,19 +73,19 @@ class DashboardScreens extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
                       color: Colors.grey[900],
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+                      children: const [
                         Icon(Icons.notifications_none, color: Colors.white),
-                        SizedBox(height: 8),
+                        SizedBox(width: 8),
                         Text(
                           'Remind Me',
                           style: TextStyle(color: Colors.white),
@@ -85,9 +96,10 @@ class DashboardScreens extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 24),
 
-            Text(
+            const SizedBox(height: 24),
+
+            const Text(
               "Today's Quotes",
               style: TextStyle(
                 color: Colors.white,
@@ -95,23 +107,27 @@ class DashboardScreens extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 12),
+
+            const SizedBox(height: 12),
+
             GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => QuotesDetailScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => QuotesByPreferenceScreen(),
+                  ),
                 );
               },
               child: Container(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.grey[900],
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '"Your wellness is an investment, not an expense."\n\n- John Quelch ',
-                  style: TextStyle(
+                  '"$todayQuoteText"\n\n- $todayQuoteAuthor',
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontStyle: FontStyle.italic,
                     fontSize: 16,
@@ -119,10 +135,10 @@ class DashboardScreens extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: 24),
 
-            // Quotes List
-            Text(
+            const SizedBox(height: 24),
+
+            const Text(
               'Quotes',
               style: TextStyle(
                 color: Colors.white,
@@ -130,15 +146,17 @@ class DashboardScreens extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 12),
+
+            const SizedBox(height: 12),
+
             buildTile(Icons.wb_sunny_outlined, 'Feeling blessed'),
             buildTile(Icons.favorite_border, 'Pride Month'),
             buildTile(Icons.star_border, 'Self-worth'),
             buildTile(Icons.favorite, 'Love'),
 
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-            Text(
+            const Text(
               'Health Tips',
               style: TextStyle(
                 color: Colors.white,
@@ -146,7 +164,9 @@ class DashboardScreens extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 12),
+
+            const SizedBox(height: 12),
+
             buildTile(Icons.wb_sunny_outlined, 'Breathe to Reset'),
           ],
         ),
@@ -155,19 +175,17 @@ class DashboardScreens extends StatelessWidget {
   }
 
   Widget buildTile(IconData icon, String title) {
-    return SizedBox(
-      child: Container(
-        margin: EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.grey[900],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: ListTile(
-          leading: Icon(icon, color: Colors.white),
-          title: Text(title, style: TextStyle(color: Colors.white)),
-          trailing: Icon(Icons.chevron_right, color: Colors.white),
-          onTap: () {},
-        ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: Colors.white),
+        title: Text(title, style: const TextStyle(color: Colors.white)),
+        trailing: const Icon(Icons.chevron_right, color: Colors.white),
+        onTap: () {},
       ),
     );
   }

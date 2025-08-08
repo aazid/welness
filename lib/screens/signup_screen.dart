@@ -1,6 +1,10 @@
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:welness_flutter_project/firebase_auth/auth.dart';
+import 'package:welness_flutter_project/prefernce/prefernce_screen.dart';
 import 'package:welness_flutter_project/screens/login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -14,6 +18,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  String selectedRole = 'user';
   bool rememberMe = false;
   bool passwordVisible = false;
 
@@ -32,27 +37,29 @@ class _SignupScreenState extends State<SignupScreen> {
         child: SingleChildScrollView(
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: EdgeInsets.symmetric(vertical: 10.h),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(height: 50.h),
                   SizedBox(
-                    height: 130,
+                    height: 130.h,
                     child: Text(
                       "Start your wellness\njourney today.",
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 28.sp,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        height: 1.5,
+                        height: 1.5.h,
                       ),
                       textAlign: TextAlign.left,
                     ),
                   ),
-
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.w,
+                      vertical: 8.h,
+                    ),
                     child: TextFormField(
                       cursorColor: Colors.white,
                       decoration: InputDecoration(
@@ -63,9 +70,12 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: 8.h),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.w,
+                      vertical: 8.h,
+                    ),
                     child: TextFormField(
                       cursorColor: Colors.white,
                       controller: emailController,
@@ -77,13 +87,16 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: 8.h),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.w,
+                      vertical: 8.h,
+                    ),
                     child: TextFormField(
                       cursorColor: Colors.white,
                       controller: passwordController,
-                      obscureText: passwordVisible,
+                      obscureText: !passwordVisible,
                       decoration: InputDecoration(
                         fillColor: Colors.grey[900],
                         filled: true,
@@ -97,11 +110,39 @@ class _SignupScreenState extends State<SignupScreen> {
                           },
                           icon: Icon(
                             passwordVisible
-                                ? Icons.visibility_off
-                                : Icons.visibility,
+                                ? Icons.visibility
+                                : Icons.visibility_off,
                           ),
                         ),
                       ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.h,
+                      vertical: 8.h,
+                    ),
+                    child: DropdownButtonFormField<String>(
+                      dropdownColor: Colors.grey[900],
+                      decoration: InputDecoration(
+                        labelText: 'Select Role',
+                        labelStyle: TextStyle(color: Colors.white),
+                        filled: true,
+                        fillColor: Colors.grey[900],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                      ),
+                      style: TextStyle(color: Colors.white),
+                      value: selectedRole,
+                      items: ['user', 'admin'].map((role) {
+                        return DropdownMenuItem(value: role, child: Text(role));
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedRole = value!;
+                        });
+                      },
                     ),
                   ),
                   Padding(
@@ -129,7 +170,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 10),
+                  SizedBox(height: 10.h),
                   SizedBox(
                     height: 45.h,
                     width: 250.w,
@@ -165,18 +206,17 @@ class _SignupScreenState extends State<SignupScreen> {
                           return;
                         }
 
-                        try {
-                          UserCredential userCredential = await FirebaseAuth
-                              .instance
-                              .createUserWithEmailAndPassword(
-                                email: email,
-                                password: password,
-                              );
+                        final result = await AuthService.signup(
+                          email: email,
+                          password: password,
+                          role: selectedRole,
+                        );
 
+                        if (result == null) {
                           messenger.showSnackBar(
                             SnackBar(
                               content: Text(
-                                "Account created: ${userCredential.user!.email}",
+                                "Account created: $email",
                                 style: TextStyle(color: Colors.grey),
                               ),
                               backgroundColor: Colors.black,
@@ -189,30 +229,12 @@ class _SignupScreenState extends State<SignupScreen> {
                               builder: (context) => LoginScreen(),
                             ),
                           );
-                        } on FirebaseAuthException catch (e) {
-                          String message;
-                          if (e.code == 'email-already-in-use') {
-                            message = "This email is already in use.";
-                          } else if (e.code == 'invalid-email') {
-                            message = "Invalid email format.";
-                          } else if (e.code == 'weak-password') {
-                            message = "Password is too weak.";
-                          } else {
-                            message = e.message ?? "Signup failed.";
-                          }
-
+                        } else {
                           messenger.showSnackBar(
-                            SnackBar(content: Text(message)),
-                          );
-                        } catch (e) {
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text("Something went wrong. Try again."),
-                            ),
+                            SnackBar(content: Text(result)),
                           );
                         }
                       },
-
                       style: TextButton.styleFrom(
                         backgroundColor: Colors.white,
                         overlayColor: Colors.white,
@@ -224,7 +246,6 @@ class _SignupScreenState extends State<SignupScreen> {
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                       ),
-
                       child: Text(
                         "Sign up",
                         style: TextStyle(color: Colors.black),
@@ -238,7 +259,22 @@ class _SignupScreenState extends State<SignupScreen> {
                     height: 45.h,
                     width: 250.w,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        UserCredential? userCredential =
+                            await AuthService.signInWithGoogle();
+                        if (userCredential != null &&
+                            userCredential.user != null) {
+                          log("Login Success: ${userCredential.user!.email}");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PrefernceScreen(),
+                            ),
+                          );
+                        } else {
+                          log(" Login Failed");
+                        }
+                      },
                       style: TextButton.styleFrom(
                         backgroundColor: Colors.grey[900],
                         shape: RoundedRectangleBorder(
@@ -252,26 +288,26 @@ class _SignupScreenState extends State<SignupScreen> {
                           Image.asset(
                             "images/icons.png",
                             color: Colors.grey,
-                            height: 20,
+                            height: 20.h,
                             fit: BoxFit.cover,
                           ),
                           SizedBox(width: 10.w),
-
                           Text(
                             "Google",
-                            style: TextStyle(color: Colors.grey, fontSize: 15),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 15.sp,
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ),
                   SizedBox(height: 11.h),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text("Already have an Account?"),
-
                       SizedBox(
                         width: 40.w,
                         child: TextButton(
@@ -288,8 +324,8 @@ class _SignupScreenState extends State<SignupScreen> {
                             "Login",
                             style: TextStyle(
                               color: Colors.white,
-                              height: 1,
-                              wordSpacing: 0,
+                              height: 1.h,
+                              wordSpacing: 0.sp,
                             ),
                           ),
                         ),

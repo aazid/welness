@@ -1,13 +1,19 @@
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get_navigation/get_navigation.dart';
+import 'package:welness_flutter_project/firebase_auth/auth.dart';
+import 'package:welness_flutter_project/prefernce/prefernce_screen.dart';
+import 'package:welness_flutter_project/screens/admin_quote_screen.dart';
 import 'package:welness_flutter_project/screens/forgot_password_screen.dart';
-
 import 'package:welness_flutter_project/screens/signup_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:welness_flutter_project/widget/social_auth_button.dart';
 import 'package:welness_flutter_project/wrapper.dart';
 
 class LoginScreen extends StatefulWidget {
-  LoginScreen({super.key});
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -15,17 +21,100 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
-
   final TextEditingController passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
   bool passwordVisible = false;
   bool rememberMe = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      messenger.showSnackBar(
+        SnackBar(content: Text("Please enter email and password")),
+      );
+      return;
+    }
+
+    final passwordRegex = RegExp(r'^(?=.*[0-9])(?=.*[!@#\$&*~]).{8,}$');
+    if (!passwordRegex.hasMatch(password)) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            "Password must be at least 8 characters,\ninclude a number and a special character",
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final loginData = await AuthService.signIn(
+        email: email,
+        password: password,
+      );
+      if (!mounted) return;
+
+      if (loginData == null) {
+        messenger.showSnackBar(SnackBar(content: Text("User role not found.")));
+        return;
+      }
+
+      final role = loginData['role'];
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            "Logged in as: $email",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.black,
+        ),
+      );
+
+      if (role == 'admin') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => AdminQuoteScreen()),
+        );
+      } else if (role == 'user') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => Wrapper()),
+        );
+      } else {
+        messenger.showSnackBar(SnackBar(content: Text("Unknown user role.")));
+      }
+    } on FirebaseAuthException catch (e) {
+      String message;
+      if (e.code == 'user-not-found') {
+        message = "No user found for that email.";
+      } else if (e.code == 'wrong-password') {
+        message = "Incorrect password.";
+      } else {
+        message = e.message ?? "Login failed.";
+      }
+
+      messenger.showSnackBar(SnackBar(content: Text(message)));
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text("Something went wrong. Try again.")),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -35,7 +124,6 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.black,
       body: SingleChildScrollView(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             SizedBox(height: 180.h),
             Center(
@@ -55,11 +143,12 @@ class _LoginScreenState extends State<LoginScreen> {
               child: TextFormField(
                 cursorColor: Colors.white,
                 controller: emailController,
+                style: TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   fillColor: Colors.grey[900],
                   filled: true,
                   hintText: "Enter your email",
-
+                  hintStyle: TextStyle(color: Colors.grey),
                   prefixIcon: Icon(Icons.email, color: Colors.grey),
                   contentPadding: EdgeInsets.symmetric(
                     vertical: 1.w,
@@ -68,73 +157,58 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 5.h),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.h, vertical: 8.w),
               child: TextFormField(
                 cursorColor: Colors.white,
                 controller: passwordController,
                 obscureText: !passwordVisible,
+                style: TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   fillColor: Colors.grey[900],
                   filled: true,
+                  hintText: "Enter your password",
+                  hintStyle: TextStyle(color: Colors.grey),
+                  prefixIcon: Icon(Icons.lock, color: Colors.grey),
                   suffixIcon: IconButton(
                     onPressed: () {
-                      setState(() {
-                        passwordVisible = !passwordVisible;
-                      });
+                      setState(() => passwordVisible = !passwordVisible);
                     },
-
                     icon: Icon(
                       passwordVisible ? Icons.visibility_off : Icons.visibility,
                       color: Colors.grey,
                     ),
                   ),
-                  hintText: "Enter your password",
-                  hintStyle: TextStyle(color: Colors.grey),
-                  prefixIcon: Icon(Icons.lock, color: Colors.grey),
                 ),
               ),
             ),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.h),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Checkbox(
                     value: rememberMe,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        rememberMe = value!;
-                      });
+                    onChanged: (value) {
+                      setState(() => rememberMe = value!);
                     },
                     checkColor: Colors.black,
                     activeColor: Colors.white,
                     side: BorderSide(color: Colors.white),
                   ),
-                  Text(
-                    " Remember  me",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontFamily: "Poppins.regular",
-                    ),
-                  ),
+                  Text(" Remember me", style: TextStyle(color: Colors.white)),
                   Spacer(),
                   TextButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ForgotPasswordScreen(),
+                          builder: (_) => ForgotPasswordScreen(),
                         ),
                       );
                     },
                     child: Text(
                       "Forgot Password?",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontFamily: "Poppins.regular",
-                      ),
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
                 ],
@@ -144,87 +218,30 @@ class _LoginScreenState extends State<LoginScreen> {
             SizedBox(
               width: 300.w,
               height: 50.h,
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.grey[900],
-                  overlayColor: Colors.white,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 24.h,
-                    vertical: 8.w,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                ),
-                onPressed: () async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  final email = emailController.text.trim();
-                  final password = passwordController.text;
-
-                  if (email.isEmpty || password.isEmpty) {
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: Text("Please enter email and password"),
+              child: _isLoading
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
                       ),
-                    );
-                    return;
-                  }
-                  final passwordRegex = RegExp(
-                    r'^(?=.*[0-9])(?=.*[!@#\$&*~]).{8,}$',
-                  );
-                  if (!passwordRegex.hasMatch(password)) {
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "Password must be at least  8 characters,\ninclude a number and a special character",
+                    )
+                  : TextButton(
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.grey[900],
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 24.h,
+                          vertical: 8.w,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.r),
                         ),
                       ),
-                    );
-                  }
-
-                  try {
-                    UserCredential userCredential = await FirebaseAuth.instance
-                        .signInWithEmailAndPassword(
-                          email: email,
-                          password: password,
-                        );
-
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "Logged in as: ${userCredential.user!.email}",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        backgroundColor: Colors.black,
+                      onPressed: _handleLogin,
+                      child: Text(
+                        'Login',
+                        style: TextStyle(color: Colors.white),
                       ),
-                    );
-
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => Wrapper()),
-                    );
-                  } on FirebaseAuthException catch (e) {
-                    String message;
-                    if (e.code == 'user-not-found') {
-                      message = "No user found for that email.";
-                    } else if (e.code == 'wrong-password') {
-                      message = "Incorrect password.";
-                    } else {
-                      message = e.message ?? "Login failed.";
-                    }
-
-                    messenger.showSnackBar(SnackBar(content: Text(message)));
-                  } catch (e) {
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: Text("Something went wrong. Try again."),
-                      ),
-                    );
-                  }
-                },
-
-                child: Text('Login', style: TextStyle(color: Colors.white)),
-              ),
+                    ),
             ),
             SizedBox(height: 10.h),
             Text("Or", style: TextStyle(color: Colors.white)),
@@ -232,20 +249,21 @@ class _LoginScreenState extends State<LoginScreen> {
             SizedBox(
               width: 300.w,
               height: 50.h,
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.grey[900],
-                  overlayColor: Colors.white,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 24.h,
-                    vertical: 8.w,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                ),
-                onPressed: () {},
-                child: Text("Google", style: TextStyle(color: Colors.white)),
+              child: SocialAuthButton(
+                onPressed: () async {
+                  UserCredential? User = await AuthService.signInWithGoogle();
+                  if (User != null) {
+                    log("login sucesss");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PrefernceScreen(),
+                      ),
+                    );
+                  } else {
+                    log("Login Failed");
+                  }
+                },
               ),
             ),
             SizedBox(height: 11.h),
@@ -256,13 +274,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Text(
                     "Don't have an Account?",
-                    style: TextStyle(fontSize: 12.sp),
+                    style: TextStyle(fontSize: 12.sp, color: Colors.white),
                   ),
                   TextButton(
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => SignupScreen()),
+                        MaterialPageRoute(builder: (_) => SignupScreen()),
                       );
                     },
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),

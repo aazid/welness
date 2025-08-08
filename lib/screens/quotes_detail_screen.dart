@@ -1,127 +1,140 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:welness_flutter_project/screens/dashboard_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class QuotesDetailScreen extends StatefulWidget {
-  const QuotesDetailScreen({super.key});
+class QuotesByPreferenceScreen extends StatefulWidget {
+  const QuotesByPreferenceScreen({super.key});
 
   @override
-  State<QuotesDetailScreen> createState() => _QuotesDetailScreenState();
+  State<QuotesByPreferenceScreen> createState() =>
+      _QuotesByPreferenceScreenState();
 }
 
-class _QuotesDetailScreenState extends State<QuotesDetailScreen> {
+class _QuotesByPreferenceScreenState extends State<QuotesByPreferenceScreen> {
+  List<String> userPreferences = [];
+  List<Map<String, dynamic>> quotes = [];
+  bool isLoading = true;
+  String errorMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+    loadPreferencesAndQuotes();
+  }
+
+  Future<void> loadPreferencesAndQuotes() async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) {
+        setState(() {
+          errorMessage = "User not logged in.";
+          isLoading = false;
+        });
+        return;
+      }
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+
+      if (!userDoc.exists) {
+        setState(() {
+          errorMessage = "User data not found.";
+          isLoading = false;
+        });
+        return;
+      }
+
+      final data = userDoc.data()!;
+      final prefs = List<String>.from(data['preferences'] ?? []);
+
+      if (prefs.isEmpty) {
+        setState(() {
+          errorMessage = "No preferences selected.";
+          isLoading = false;
+        });
+        return;
+      }
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('quotes')
+          .where(
+            'category',
+            whereIn: prefs.length > 10 ? prefs.sublist(0, 10) : prefs,
+          )
+          .get();
+
+      final fetchedQuotes = querySnapshot.docs
+          .map((doc) => doc.data())
+          .toList();
+
+      setState(() {
+        userPreferences = prefs;
+        quotes = List<Map<String, dynamic>>.from(fetchedQuotes);
+        isLoading = false;
+        errorMessage = quotes.isEmpty
+            ? "No quotes found for your preferences."
+            : '';
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = "Error loading quotes: $e";
+        isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 24),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => DashboardScreens()),
-            );
-          },
+    if (isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: Text("Quotes For You")),
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator(color: Colors.white)),
+      );
+    }
+
+    if (errorMessage.isNotEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: Text("Quotes For You")),
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Text(
+            errorMessage,
+            style: TextStyle(color: Colors.white, fontSize: 18),
+            textAlign: TextAlign.center,
+          ),
         ),
-        centerTitle: true,
+      );
+    }
 
-        title: Text("Motivation", style: TextStyle(color: Colors.white)),
-        actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 12.w),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(12),
+    return Scaffold(
+      appBar: AppBar(title: Text("Quotes For You")),
+      backgroundColor: Colors.black,
+      body: ListView.builder(
+        padding: EdgeInsets.all(16),
+        itemCount: quotes.length,
+        itemBuilder: (context, index) {
+          final quote = quotes[index];
+          return Card(
+            color: Colors.grey[900],
+            margin: EdgeInsets.only(bottom: 12),
+            child: ListTile(
+              title: Text(
+                '"${quote['quote']}"',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
-              child: Text(
-                "1/15",
-                style: TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          Positioned(
-            right: 5.w,
-            child: CircleAvatar(
-              radius: 30.r,
-              backgroundColor: Colors.grey[900],
-
-              child: IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.volume_up, size: 28.sp),
+              subtitle: Text(
+                "- ${quote['author'] ?? 'Unknown'}",
+                style: TextStyle(color: Colors.white70),
               ),
             ),
-          ),
-          Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "'The only way to do great work\nis to love what you do.'",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20.sp,
-                      height: 1.5,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  Text(
-                    "- Steve Jobs",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey, fontSize: 16.sp),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: EdgeInsets.only(bottom: 40.h),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Column(
-                    children: [
-                      Icon(
-                        Icons.swipe_up_outlined,
-                        color: Colors.white,
-                        size: 30.sp,
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        "Swipe up",
-                        style: TextStyle(color: Colors.white, fontSize: 14.sp),
-                      ),
-                      SizedBox(height: 20.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.favorite_border,
-                            color: Colors.white,
-                            size: 33.sp,
-                          ),
-                          Icon(Icons.loyalty, color: Colors.white, size: 33.sp),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

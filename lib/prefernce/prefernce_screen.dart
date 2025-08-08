@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:welness_flutter_project/firebase_auth/auth.dart';
 import 'package:welness_flutter_project/screens/dashboard_screen.dart';
 import 'package:welness_flutter_project/screens/login_screen.dart';
 import 'package:welness_flutter_project/widget/mybutton_widget.dart';
@@ -22,15 +23,19 @@ class _PrefernceScreenState extends State<PrefernceScreen> {
     "Letting go",
     "Love",
     "Realationships",
-    "Faith & Spritiuality",
+    "Faith & Spirituality",
     "Positive thinking",
     "Stress & Anxiety",
   ];
-  List<String> Selectedtopics = [];
+
+  List<String> selectedTopics = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
+        backgroundColor: Colors.black,
         elevation: 0,
         leading: MybuttonWidget(
           label: "Back",
@@ -42,7 +47,6 @@ class _PrefernceScreenState extends State<PrefernceScreen> {
           },
         ),
       ),
-
       body: SafeArea(
         child: Stack(
           children: [
@@ -61,27 +65,24 @@ class _PrefernceScreenState extends State<PrefernceScreen> {
                   ),
                   SizedBox(height: 30.h),
                   GridView.builder(
-                    shrinkWrap:
-                        true, // Ensures the GridView takes only the required space
-                    physics:
-                        NeverScrollableScrollPhysics(), // Prevents scrolling inside the GridView
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, // 2 items per row
-                      crossAxisSpacing:
-                          10.w, // Horizontal spacing between items
-                      mainAxisSpacing: 10.h, // Vertical spacing between rows
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 10.w,
+                      mainAxisSpacing: 10.h,
                       childAspectRatio: 2.5.r,
                     ),
                     itemCount: topics.length,
                     itemBuilder: (context, index) {
                       final topic = topics[index];
-                      final isSelected = Selectedtopics.contains(topic);
+                      final isSelected = selectedTopics.contains(topic);
                       return GestureDetector(
                         onTap: () {
                           setState(() {
                             isSelected
-                                ? Selectedtopics.remove(topic)
-                                : Selectedtopics.add(topic);
+                                ? selectedTopics.remove(topic)
+                                : selectedTopics.add(topic);
                           });
                         },
                         child: Container(
@@ -125,16 +126,25 @@ class _PrefernceScreenState extends State<PrefernceScreen> {
                   width: 320.w,
                   height: 50.h,
                   child: TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DashboardScreens(),
-                        ),
+                    onPressed: () async {
+                      final success = await AuthService.updatePreferences(
+                        selectedTopics,
                       );
+                      if (success) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DashboardScreens(),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Failed to save preferences")),
+                        );
+                      }
                     },
+
                     style: TextButton.styleFrom(
-                      overlayColor: Colors.white,
                       backgroundColor: Colors.grey[900],
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -144,7 +154,7 @@ class _PrefernceScreenState extends State<PrefernceScreen> {
                       "Save",
                       style: TextStyle(
                         color: Colors.grey,
-                        fontFamily: 'Popppins',
+                        fontFamily: 'Poppins',
                         fontSize: 16,
                       ),
                     ),
